@@ -1,21 +1,15 @@
 var myGamePiece;
 var myObstacles = [];
 var myScore;
-var frameRate = 20;
-var obstacleInterval = 150;
-
-function startGame() {
-    myGamePiece = new component(30, 30, "red", 10, 120);
-    myGamePiece.gravity = 0.05;
-    myScore = new scoreboard("30px", "Consolas", "black", 280, 40);
-    myGameArea.start();
-}
+var frameRate = 20; // per second
+var obstacleInterval = 150; // frames
+var gameGravity = 0.5; // pixels per second per second
 
 var myGameArea = { // define the playing area
     canvas : document.createElement("canvas"),
     start : function() {
-        this.canvas.width = 480;
-        this.canvas.height = 270;
+        this.canvas.width = 0.6 * screen.width;
+        this.canvas.height = 0.6 * screen.height;
         this.context = this.canvas.getContext("2d");
         // insert the canvas as first thing in the document?
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
@@ -27,8 +21,22 @@ var myGameArea = { // define the playing area
     }
 }
 
+function startGame() {
+    var blockDim = myGameArea.canvas.height / 7;
+    var blockStartingPos = myGameArea.canvas.width / 5;
+     myGamePiece = new block(blockDim, blockDim, "red", blockStartingPos, 0);
+     myGamePiece.gravity = 0.05;
+     myScore = new scoreboard("30px", "Consolas", "black", 280, 40);
+     myGameArea.start();
+ }
+
+function doGameOver() {
+    clearInterval(myGameArea.interval);
+    var jumpInput = document.getElementById('jumpInput');
+    jumpInput.parentNode.removeChild(jumpInput);
+}
+
 function scoreboard(width, font, color, x, y) {
-    this.score = 0;
     this.width = width;
     this.font = font;
     this.x = x;
@@ -42,33 +50,45 @@ function scoreboard(width, font, color, x, y) {
     }
 }
 
-function component(width, height, color, x, y) {
-    this.type = type;
-    this.score = 0;
+function obstacle(width, height, colour, x, y) {
     this.width = width;
     this.height = height;
-    this.speedX = 0;
+    this.x = x;
+    this.y = y;
+    this.update = function() { //update the player area with the new values
+       ctx = myGameArea.context;
+       ctx.fillStyle = colour;
+       ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+}
+
+function block(width, height, color, x, y) {
+    this.width = width;
+    this.height = height;
     this.speedY = 0;
     this.x = x;
     this.y = y;
-    this.gravity = 0;
-    this.gravitySpeed = 0;
+
     this.update = function() { //update the player area with the new values
         ctx = myGameArea.context;
         ctx.fillStyle = color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
     }
+
     this.newPos = function() {
-        this.gravitySpeed += this.gravity; /// gravity is a speed not an acceleration!
-        this.x += this.speedX;
-        this.y += this.speedY + this.gravitySpeed;
-        this.hitBottom();
+        this.y += this.speedY //+ this.gravitySpeed;
+        this.speedY += gameGravity;
+        this.hitSides();
     }
-    this.hitBottom = function() {
+    this.hitSides = function() {
         var rockbottom = myGameArea.canvas.height - this.height;
         if (this.y > rockbottom) {
            this.y = rockbottom;
-           this.gravitySpeed = 0;
+           this.speedY = 0;
+        }
+        else if (this.y < 1){
+            this.y = 1
+            this.speedY = 0;
         }
     }
     this.crashWith = function(otherobj) {
@@ -89,25 +109,28 @@ function component(width, height, color, x, y) {
 }
 
 function updateGameArea() {
-    var x, height, gap, minHeight, maxHeight, minGap, maxGap;
+    var height, gap, minHeight, maxHeight, minGap, maxGap;
     for (i = 0; i < myObstacles.length; i += 1) {
         if (myGamePiece.crashWith(myObstacles[i])) {
-            // Game over
+            doGameOver();
             return;
         }
     }
     myGameArea.clear(); // clear the previous frame
     myGameArea.frameNo += 1;
     if (myGameArea.frameNo == 1 || everyinterval(obstacleInterval)) { // create obstacle
-        x = myGameArea.canvas.width;
-        minHeight = 20;
-        maxHeight = 200;
+        var screenRHS = myGameArea.canvas.width;
+        var screenHeight = myGameArea.canvas.height;
+        this.gapMaxSize = 10 * myGamePiece.height;
+        this.gapMinSize = 5 * myGamePiece.height;
+        gap = Math.floor(Math.random()*(this.gapMaxSize-this.gapMinSize+1)+this.gapMinSize);
+
+        maxHeight = 0.1 * myGameArea.canvas.height;
+        minHeight = myGameArea.canvas.height - gap;
         height = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
-        minGap = 50;
-        maxGap = 200;
-        gap = Math.floor(Math.random()*(maxGap-minGap+1)+minGap);
-        myObstacles.push(new component(10, height, "blue", x, 0)); // top of obstacle
-        myObstacles.push(new component(10, x - height - gap, "blue", x, height + gap)); //bottom
+
+        myObstacles.push(new obstacle(10, height, "blue", screenRHS, 0)); // top of obstacle
+        myObstacles.push(new obstacle(10, screenHeight, "blue", screenRHS, height + gap)); //bottom
     }
     for (i = 0; i < myObstacles.length; i += 1) { //move the obstacles
         myObstacles[i].x += -1;
@@ -120,11 +143,14 @@ function updateGameArea() {
 }
 
 function everyinterval(n) {
-    if ((myGameArea.frameNo / n) % 1 == 0) {return true;}
+    if ((myGameArea.frameNo / n) % 1 == 0) {
+        return true;
+    }
     return false;
 }
 
 function jump() {
-    // increase upward velocity
-    myGamePiece.gravity = -0.002;
+    myGamePiece.speedY += -8;
+    myGamePiece.newPos();
+    myGamePiece.update();
 }
