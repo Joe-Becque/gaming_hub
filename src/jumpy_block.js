@@ -8,7 +8,7 @@ var myGameArea = {
     //define the playing area
     canvas : document.createElement("canvas"),
     start : function() {
-        this.canvas.width = 0.6 * screen.width;
+        this.canvas.width = 0.4 * screen.width;
         this.canvas.height = 0.6 * screen.height;
         this.blockDim = this.canvas.height / 15;
         this.gapMaxSize = 8 * this.blockDim;
@@ -29,8 +29,8 @@ var myGameArea = {
 function startGame() {
     myGameArea.start();
     var blockStartingPos = myGameArea.canvas.width / 10;
-     myGamePiece = new block(myGameArea.blockDim, myGameArea.blockDim, "red", blockStartingPos, 0);
-     myScore = new scoreboard("30px", "Consolas", "black", 280, 40);
+    myGamePiece = new block(myGameArea.blockDim, myGameArea.blockDim, blockStartingPos, 0);
+    myScore = new scoreboard(30, "Consolas", "black", 280, 25);
  }
 
 function gameOver() {
@@ -39,16 +39,19 @@ function gameOver() {
     jumpInput.parentNode.removeChild(jumpInput);
 }
 
-function scoreboard(width, font, color, x, y) {
-    this.width = width;
+function scoreboard(fontSize, font, color, x, y) {
+    this.fontSize = fontSize;
     this.font = font;
-    this.x = x;
+    this.x = (myGameArea.canvas.width / 2) - 60;
     this.y = y;
 
     this.updateScore = function() {
         ctx = myGameArea.context;
-        ctx.font = this.width + " " + this.height;
+        ctx.font = this.fontSize + "px " + this.font;
         ctx.fillStyle = color;
+        ctx.lineWidth = 3
+        ctx.strokeStyle = "gray";
+        ctx.strokeText(this.text, this.x, this.y);
         ctx.fillText(this.text, this.x, this.y);
     }
 }
@@ -59,26 +62,35 @@ function obstacle(width, height, colour, x, y) {
     this.x = x;
     this.y = y;
 
+    this.image = new Image();
+    this.image.src = "../images/lava.jpg";
+
+    this.imageBorder = new Image();
+    this.imageBorder.colour = 'black';
+
+
     //update the player area with the new position
     this.update = function() {
-       ctx = myGameArea.context;
-       ctx.fillStyle = colour;
-       ctx.fillRect(this.x, this.y, this.width, this.height);
+       var ctx = myGameArea.context;
+      //drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+      ctx.drawImage(this.image, 0, 0, this.width, this.height, this.x, this.y, this.width, this.height)
     }
 }
 
-function block(width, height, color, x, y) {
+function block(width, height, x, y) {
     this.width = width;
     this.height = height;
     this.speedY = 0;
     this.x = x;
     this.y = y;
 
+    this.image = new Image();
+    this.image.src = '../images/ice.jpg';
+
     //update the player area with the new position
     this.update = function() {
-        ctx = myGameArea.context;
-        ctx.fillStyle = color;
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        var ctx = myGameArea.context;
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     }
 
     //calculate the position and speed for the new frame
@@ -152,8 +164,8 @@ function updateGameArea() {
         minHeight = screenHeight - gap;
         height = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
 
-        myObstacles.push(new obstacle(10, height, "blue", screenRHS, 0)); // top of obstacle
-        myObstacles.push(new obstacle(10, screenHeight, "blue", screenRHS, height + gap)); //bottom
+        myObstacles.push(new obstacle(20, height, "blue", screenRHS, 0)); // top of obstacle
+        myObstacles.push(new obstacle(20, screenHeight, "blue", screenRHS, height + gap)); //bottom
     }
 
     //move the obstacles
