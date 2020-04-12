@@ -1,24 +1,27 @@
 var myGamePiece;
-var myObstacles = [];
 var myScore;
-var frameRate = 20;    //frames per second
-var gameGravity = 0.5; //pixels per second per second
+var myObstacles       = [];
+var frameInterval     = 20;    //millis between each frame
+var jumpSpeedIncrease = 8;     //pixels per frame
+var gameGravity       = 0.5;   //pixels per frame per frame
+var obstacleWidth     = 20;    //pixels
+var startingObstacleInterval = 150 //frames between new obstacles
 
 var myGameArea = {
     //define the playing area
     canvas : document.createElement("canvas"),
     start : function() {
+        myObstacles = []
         this.canvas.width = 0.4 * screen.width;
         this.canvas.height = 0.6 * screen.height;
         this.blockDim = this.canvas.height / 15;
-        this.gapMaxSize = 8 * this.blockDim;
-        this.gapMinSize = 4 * this.blockDim;
+        this.gapMaxSize = 6 * this.blockDim;
+        this.gapMinSize = 4.2 * this.blockDim;
         this.frameNo = 0;
-        this.obstacleInterval = 150; //number of frames between new obstacles
-        this.nextObstacle = 1;       //frame number of next obstacle to be created
+        this.obstacleInterval = startingObstacleInterval;
+        this.nextObstacle = 1;   //frame number of next obstacle to be created
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-        this.interval = setInterval(updateGameArea, frameRate); //update the game area frameRate times per second
     },
     clear : function() {
         //clear the contents of the game area
@@ -26,37 +29,102 @@ var myGameArea = {
     }
 }
 
+function getReady() {
+    myGameArea.start();
+    var ctx = myGameArea.context
+
+    //start button
+    var buttonW = 130;
+    var buttonH = 80;
+    var buttonX = (0.5 * myGameArea.canvas.width) - (0.5 * buttonW);
+    var buttonY = (0.5 * myGameArea.canvas.height) - (0.5 * buttonH);
+    ctx.fillStyle = 'red';
+    ctx.fillRect(buttonX, buttonY, buttonW, buttonH);
+    //start text
+    var textStartX = 0.5 * myGameArea.canvas.width;
+    var textStartY = (0.5 * myGameArea.canvas.height) - 10;
+    ctx.font = 'bolder 20px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'white';
+    ctx.fillText('Any key',  textStartX, textStartY);
+    ctx.fillText('to start', textStartX, textStartY + 25);
+
+    document.addEventListener('keydown', startEvent);
+}
+
+function startEvent(event) {
+        document.removeEventListener('keydown', startEvent);
+        startGame();
+}
+
 function startGame() {
     myGameArea.start();
+    myGameArea.interval = setInterval(updateGameArea, frameInterval); //update the game area every frameInterval
     var blockStartingPos = myGameArea.canvas.width / 10;
     myGamePiece = new block(myGameArea.blockDim, myGameArea.blockDim, blockStartingPos, 0);
-    myScore = new scoreboard(30, "Consolas", "black", 280, 25);
+    document.addEventListener('keydown', jump);
+    myScore = new scoreboard();
+ }
+
+ function jump(event) {
+     if (event.key == ' ' || event.key == 'Spacebar') {
+         myGamePiece.speedY  = -jumpSpeedIncrease;
+         myGamePiece.newPos();
+         myGamePiece.update();
+     }
  }
 
 function gameOver() {
     clearInterval(myGameArea.interval);
-    var jumpInput = document.getElementById('jumpInput');
-    jumpInput.parentNode.removeChild(jumpInput);
+    document.removeEventListener('keydown', jump);
+
+    //game over box
+    var boxWidth = 0.6 * myGameArea.canvas.width;
+    var boxHeight = 0.6 * myGameArea.canvas.height;
+    var boxX = (0.5 * myGameArea.canvas.width) - (0.5 * boxWidth);
+    var boxY = (0.5 * myGameArea.canvas.height) - (0.5 * boxHeight);
+    ctx.fillStyle = 'black';
+    ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+    //game over text
+    var textGOX = 0.5 * myGameArea.canvas.width;
+    var textGOY = 0.4 * myGameArea.canvas.height;
+    ctx.font = 'bolder 30px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'red';
+    ctx.fillText('GAME OVER', textGOX, textGOY);
+    //retry text
+    var textRetryX = 0.5 * myGameArea.canvas.width;
+    var textRetryY = 0.6 * myGameArea.canvas.height;
+    ctx.font = 'bold 20px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'red';
+    ctx.fillText('click to retry', textRetryX, textRetryY);
+
+    document.addEventListener('click', retry);
 }
 
-function scoreboard(fontSize, font, color, x, y) {
-    this.fontSize = fontSize;
-    this.font = font;
-    this.x = (myGameArea.canvas.width / 2) - 60;
-    this.y = y;
+function retry(event) {
+    document.removeEventListener('click', retry);
+    getReady();
+}
+
+function scoreboard() {
+    var posX = (myGameArea.canvas.width / 2);
+    var posY = 25;
 
     this.updateScore = function() {
         ctx = myGameArea.context;
-        ctx.font = this.fontSize + "px " + this.font;
-        ctx.fillStyle = color;
+        ctx.font = "30px Consolas";
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'black';
         ctx.lineWidth = 3
         ctx.strokeStyle = "gray";
-        ctx.strokeText(this.text, this.x, this.y);
-        ctx.fillText(this.text, this.x, this.y);
+        ctx.strokeText(this.text, posX, posY);
+        ctx.fillText(this.text, posX, posY);
     }
 }
 
-function obstacle(width, height, colour, x, y) {
+function obstacle(width, height, x, y) {
     this.width = width;
     this.height = height;
     this.x = x;
@@ -65,15 +133,10 @@ function obstacle(width, height, colour, x, y) {
     this.image = new Image();
     this.image.src = "../images/lava.jpg";
 
-    this.imageBorder = new Image();
-    this.imageBorder.colour = 'black';
-
-
     //update the player area with the new position
     this.update = function() {
-       var ctx = myGameArea.context;
       //drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
-      ctx.drawImage(this.image, 0, 0, this.width, this.height, this.x, this.y, this.width, this.height)
+      myGameArea.context.drawImage(this.image, 0, 0, this.width, this.height, this.x, this.y, this.width, this.height)
     }
 }
 
@@ -156,16 +219,19 @@ function updateGameArea() {
         //set when the next obstacle is
         myGameArea.nextObstacle = myGameArea.frameNo + myGameArea.obstacleInterval;
 
-        //make the gap
+        //make the gap size in pixels
         gap = Math.floor(Math.random()*(myGameArea.gapMaxSize-myGameArea.gapMinSize+1)+myGameArea.gapMinSize);
 
-        //set the height of the gap
-        maxHeight = 0.1 * screenHeight;
-        minHeight = screenHeight - gap;
-        height = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
+        //set the position of the gap (position where the top obstacle will stop)
+        maxHeight = 0.05 * screenHeight;
+        minHeight = (screenHeight - gap) - (0.05 * screenHeight);
+        var topObstacleHeight = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
+        var topObstacleStart = 0;
+        var bottomObstacleHeight = screenHeight - topObstacleHeight - gap
+        var bottomObstacleStart = screenHeight - bottomObstacleHeight;
 
-        myObstacles.push(new obstacle(20, height, "blue", screenRHS, 0)); // top of obstacle
-        myObstacles.push(new obstacle(20, screenHeight, "blue", screenRHS, height + gap)); //bottom
+        myObstacles.push(new obstacle(obstacleWidth, topObstacleHeight, screenRHS, topObstacleStart));       // top of obstacle
+        myObstacles.push(new obstacle(obstacleWidth, bottomObstacleHeight, screenRHS, bottomObstacleStart)); // bottom
     }
 
     //move the obstacles
@@ -185,7 +251,7 @@ function updateGameArea() {
 
 function levelUp() {
     // increase the obstacle frequency
-    if (myGamePiece.width < Math.floor(0.95 * myGameArea.obstacleInterval)) {
+    if (1.5 * myGamePiece.width < Math.floor(0.95 * myGameArea.obstacleInterval)) {
         myGameArea.obstacleInterval = Math.floor(0.95 * myGameArea.obstacleInterval);
     }
 
@@ -196,10 +262,4 @@ function levelUp() {
     else {
         myGameArea.maxGap = myGameArea.minGap;
     }
-}
-
-function jump() {
-    myGamePiece.speedY += -8;
-    myGamePiece.newPos();
-    myGamePiece.update();
 }
