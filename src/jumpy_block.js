@@ -1,85 +1,169 @@
 var myGamePiece;
-var myObstacles = [];
 var myScore;
-var frameRate = 20; // per second
-var obstacleInterval = 150; // frames
-var gameGravity = 0.5; // pixels per second per second
+var myObstacles       = [];
+var frameInterval     = 20;    //millis between each frame
+var jumpSpeedIncrease = 7;     //pixels per frame
+var gameGravity       = 0.5;   //pixels per frame per frame
+var obstacleWidth     = 20;    //pixels
+var startingObstacleInterval = 150 //frames between new obstacles
 
-var myGameArea = { // define the playing area
+var myGameArea = {
+    //define the playing area
     canvas : document.createElement("canvas"),
     start : function() {
-        this.canvas.width = 0.6 * screen.width;
+        myObstacles = []
+        this.canvas.width = 0.4 * screen.width;
         this.canvas.height = 0.6 * screen.height;
-        this.context = this.canvas.getContext("2d");
-        // insert the canvas as first thing in the document?
-        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.blockDim = this.canvas.height / 15;
+        this.gapMaxSize = 6 * this.blockDim;
+        this.gapMinSize = 4.2 * this.blockDim;
         this.frameNo = 0;
-        this.interval = setInterval(updateGameArea, frameRate);
+        this.obstacleInterval = startingObstacleInterval;
+        this.nextObstacle = 1;   //frame number of next obstacle to be created
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
     },
-    clear : function() { // remove the contents of the game area
+    clear : function() {
+        //clear the contents of the game area
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
 }
 
-function startGame() {
-    var blockDim = myGameArea.canvas.height / 7;
-    var blockStartingPos = myGameArea.canvas.width / 5;
-     myGamePiece = new block(blockDim, blockDim, "red", blockStartingPos, 0);
-     myGamePiece.gravity = 0.05;
-     myScore = new scoreboard("30px", "Consolas", "black", 280, 40);
-     myGameArea.start();
- }
+function getReady() {
+    myGameArea.start();
+    var ctx = myGameArea.context
 
-function doGameOver() {
-    clearInterval(myGameArea.interval);
-    var jumpInput = document.getElementById('jumpInput');
-    jumpInput.parentNode.removeChild(jumpInput);
+    //start button
+    var buttonW = 130;
+    var buttonH = 80;
+    var buttonX = (0.5 * myGameArea.canvas.width) - (0.5 * buttonW);
+    var buttonY = (0.5 * myGameArea.canvas.height) - (0.5 * buttonH);
+    ctx.fillStyle = 'red';
+    ctx.fillRect(buttonX, buttonY, buttonW, buttonH);
+    //start text
+    var textStartX = 0.5 * myGameArea.canvas.width;
+    var textStartY = (0.5 * myGameArea.canvas.height) - 10;
+    ctx.font = 'bolder 20px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'white';
+    ctx.fillText('Any key',  textStartX, textStartY);
+    ctx.fillText('to start', textStartX, textStartY + 25);
+
+    document.addEventListener('keydown', startEvent);
 }
 
-function scoreboard(width, font, color, x, y) {
-    this.width = width;
-    this.font = font;
-    this.x = x;
-    this.y = y;
+function startEvent(event) {
+        document.removeEventListener('keydown', startEvent);
+        startGame();
+}
+
+function startGame() {
+    myGameArea.start();
+    myGameArea.interval = setInterval(updateGameArea, frameInterval); //update the game area every frameInterval
+    var blockStartingPos = myGameArea.canvas.width / 10;
+    myGamePiece = new block(myGameArea.blockDim, myGameArea.blockDim, blockStartingPos, 0);
+    document.addEventListener('keydown', jump);
+    myScore = new scoreboard();
+ }
+
+ function jump(event) {
+     if (event.key == ' ' || event.key == 'Spacebar') {
+         myGamePiece.speedY  = -jumpSpeedIncrease;
+         myGamePiece.newPos();
+         myGamePiece.update();
+     }
+ }
+
+function gameOver() {
+    clearInterval(myGameArea.interval);
+    document.removeEventListener('keydown', jump);
+
+    //game over box
+    var boxWidth = 0.6 * myGameArea.canvas.width;
+    var boxHeight = 0.6 * myGameArea.canvas.height;
+    var boxX = (0.5 * myGameArea.canvas.width) - (0.5 * boxWidth);
+    var boxY = (0.5 * myGameArea.canvas.height) - (0.5 * boxHeight);
+    ctx.fillStyle = 'black';
+    ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+    //game over text
+    var textGOX = 0.5 * myGameArea.canvas.width;
+    var textGOY = 0.4 * myGameArea.canvas.height;
+    ctx.font = 'bolder 30px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'red';
+    ctx.fillText('GAME OVER', textGOX, textGOY);
+    //retry text
+    var textRetryX = 0.5 * myGameArea.canvas.width;
+    var textRetryY = 0.6 * myGameArea.canvas.height;
+    ctx.font = 'bold 20px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'red';
+    ctx.fillText('click to retry', textRetryX, textRetryY);
+
+    document.addEventListener('click', retry);
+}
+
+function retry(event) {
+    document.removeEventListener('click', retry);
+    getReady();
+}
+
+function scoreboard() {
+    var posX = (myGameArea.canvas.width / 2);
+    var posY = 25;
 
     this.updateScore = function() {
         ctx = myGameArea.context;
-        ctx.font = this.width + " " + this.height;
-        ctx.fillStyle = color;
-        ctx.fillText(this.text, this.x, this.y);
+        ctx.font = "30px Consolas";
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'black';
+        ctx.lineWidth = 3
+        ctx.strokeStyle = "gray";
+        ctx.strokeText(this.text, posX, posY);
+        ctx.fillText(this.text, posX, posY);
     }
 }
 
-function obstacle(width, height, colour, x, y) {
+function obstacle(width, height, x, y) {
     this.width = width;
     this.height = height;
     this.x = x;
     this.y = y;
-    this.update = function() { //update the player area with the new values
-       ctx = myGameArea.context;
-       ctx.fillStyle = colour;
-       ctx.fillRect(this.x, this.y, this.width, this.height);
+
+    this.image = new Image();
+    this.image.src = "../images/lava.jpg";
+
+    //update the player area with the new position
+    this.update = function() {
+      //drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+      myGameArea.context.drawImage(this.image, 0, 0, this.width, this.height, this.x, this.y, this.width, this.height)
     }
 }
 
-function block(width, height, color, x, y) {
+function block(width, height, x, y) {
     this.width = width;
     this.height = height;
     this.speedY = 0;
     this.x = x;
     this.y = y;
 
-    this.update = function() { //update the player area with the new values
-        ctx = myGameArea.context;
-        ctx.fillStyle = color;
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+    this.image = new Image();
+    this.image.src = '../images/ice.jpg';
+
+    //update the player area with the new position
+    this.update = function() {
+        var ctx = myGameArea.context;
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     }
 
+    //calculate the position and speed for the new frame
     this.newPos = function() {
-        this.y += this.speedY //+ this.gravitySpeed;
+        this.y += this.speedY
         this.speedY += gameGravity;
         this.hitSides();
     }
+
+    //block can't move passed the edge of the game area
     this.hitSides = function() {
         var rockbottom = myGameArea.canvas.height - this.height;
         if (this.y > rockbottom) {
@@ -91,6 +175,8 @@ function block(width, height, color, x, y) {
             this.speedY = 0;
         }
     }
+
+    //detect collision with obstacles
     this.crashWith = function(otherobj) {
         var myleft = this.x;
         var myright = this.x + (this.width);
@@ -109,48 +195,71 @@ function block(width, height, color, x, y) {
 }
 
 function updateGameArea() {
-    var height, gap, minHeight, maxHeight, minGap, maxGap;
+    //check if the player has crashed
     for (i = 0; i < myObstacles.length; i += 1) {
         if (myGamePiece.crashWith(myObstacles[i])) {
-            doGameOver();
+            gameOver();
             return;
         }
     }
-    myGameArea.clear(); // clear the previous frame
+    myGameArea.clear();
     myGameArea.frameNo += 1;
-    if (myGameArea.frameNo == 1 || everyinterval(obstacleInterval)) { // create obstacle
+
+    //level up
+    if ((myGameArea.frameNo / 500) % 1 == 0) {
+        levelUp();
+    }
+
+    //create obstacle
+    if (myGameArea.frameNo == myGameArea.nextObstacle) {
+        var height, gap, minHeight, maxHeight;
         var screenRHS = myGameArea.canvas.width;
         var screenHeight = myGameArea.canvas.height;
-        this.gapMaxSize = 10 * myGamePiece.height;
-        this.gapMinSize = 5 * myGamePiece.height;
-        gap = Math.floor(Math.random()*(this.gapMaxSize-this.gapMinSize+1)+this.gapMinSize);
 
-        maxHeight = 0.1 * myGameArea.canvas.height;
-        minHeight = myGameArea.canvas.height - gap;
-        height = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
+        //set when the next obstacle is
+        myGameArea.nextObstacle = myGameArea.frameNo + myGameArea.obstacleInterval;
 
-        myObstacles.push(new obstacle(10, height, "blue", screenRHS, 0)); // top of obstacle
-        myObstacles.push(new obstacle(10, screenHeight, "blue", screenRHS, height + gap)); //bottom
+        //make the gap size in pixels
+        gap = Math.floor(Math.random()*(myGameArea.gapMaxSize-myGameArea.gapMinSize+1)+myGameArea.gapMinSize);
+
+        //set the position of the gap (position where the top obstacle will stop)
+        maxHeight = 0.05 * screenHeight;
+        minHeight = (screenHeight - gap) - (0.05 * screenHeight);
+        var topObstacleHeight = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
+        var topObstacleStart = 0;
+        var bottomObstacleHeight = screenHeight - topObstacleHeight - gap
+        var bottomObstacleStart = screenHeight - bottomObstacleHeight;
+
+        myObstacles.push(new obstacle(obstacleWidth, topObstacleHeight, screenRHS, topObstacleStart));       // top of obstacle
+        myObstacles.push(new obstacle(obstacleWidth, bottomObstacleHeight, screenRHS, bottomObstacleStart)); // bottom
     }
-    for (i = 0; i < myObstacles.length; i += 1) { //move the obstacles
+
+    //move the obstacles
+    for (i = 0; i < myObstacles.length; i += 1) {
         myObstacles[i].x += -1;
         myObstacles[i].update();
     }
+
+    //update the scores
     myScore.text="SCORE: " + myGameArea.frameNo;
     myScore.updateScore();
+
+    //update the block's position
     myGamePiece.newPos();
     myGamePiece.update();
 }
 
-function everyinterval(n) {
-    if ((myGameArea.frameNo / n) % 1 == 0) {
-        return true;
+function levelUp() {
+    // increase the obstacle frequency
+    if (1.5 * myGamePiece.width < Math.floor(0.95 * myGameArea.obstacleInterval)) {
+        myGameArea.obstacleInterval = Math.floor(0.95 * myGameArea.obstacleInterval);
     }
-    return false;
-}
 
-function jump() {
-    myGamePiece.speedY += -8;
-    myGamePiece.newPos();
-    myGamePiece.update();
+    // make the gaps smaller
+    if (0.9 * myGameArea.maxGap > myGameArea.minGap) {
+        myGameArea.maxGap = 0.9 * myGameArea.maxGap;
+    }
+    else {
+        myGameArea.maxGap = myGameArea.minGap;
+    }
 }
