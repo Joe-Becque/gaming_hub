@@ -6,4 +6,14 @@ My first attempt with JavaScript.
 
 ## To Run
 
-Download the repository and open `pages/jumpy_block.html` in a browser.
+Download the repository and open `jumpy_block/pages/jumpy_block.html` in a browser.
+
+![Start](https://user-images.githubusercontent.com/38461467/88462384-e332c300-cea2-11ea-92f1-8d05564369c6.PNG "Start")
+
+
+![Playing](https://user-images.githubusercontent.com/38461467/88462381-ddd57880-cea2-11ea-819a-19a31be18d8e.PNG "Playing")
+
+
+![Game Over](https://user-images.githubusercontent.com/38461467/88462386-e7f77700-cea2-11ea-965c-3b1564a5485f.PNG "Game over")
+
+
