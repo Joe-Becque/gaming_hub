@@ -2,7 +2,7 @@ var myGamePiece;
 var myScore;
 var myObstacles       = [];
 var frameInterval     = 20;    //millis between each frame
-var jumpSpeedIncrease = 8;     //pixels per frame
+var jumpSpeedIncrease = 7;     //pixels per frame
 var gameGravity       = 0.5;   //pixels per frame per frame
 var obstacleWidth     = 20;    //pixels
 var startingObstacleInterval = 150 //frames between new obstacles

@@ -1,12 +1,7 @@
-# gaming_hub
+# Jumpy Block
 
-## TODO
+Dodge the obstacles as long as you can!
 
-* make it pretty
-    * colours change as it gets harder
-    * better colours / images
-    * don't need to use the text entry to jump
-* add a start button and a game over message
-* keep a record of scores - use a cookie?
-* make it into a downloadable program
-* write a readme with demos
+A simple game, to give me my first taste at javascript.
+
+Run it in your browser at [https://htmlpreview.github.io/?https://github.com/Joe-Becque/jumpy_block/blob/master/src/jumpy_block.js](https://htmlpreview.github.io/?https://github.com/Joe-Becque/jumpy_block/blob/master/src/jumpy_block.js)
