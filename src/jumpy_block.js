@@ -34,20 +34,21 @@ function getReady() {
     var ctx = myGameArea.context
 
     //start button
-    var buttonW = 130;
-    var buttonH = 80;
+    var buttonW = 200;
+    var buttonH = 100;
     var buttonX = (0.5 * myGameArea.canvas.width) - (0.5 * buttonW);
     var buttonY = (0.5 * myGameArea.canvas.height) - (0.5 * buttonH);
     ctx.fillStyle = 'red';
     ctx.fillRect(buttonX, buttonY, buttonW, buttonH);
     //start text
     var textStartX = 0.5 * myGameArea.canvas.width;
-    var textStartY = (0.5 * myGameArea.canvas.height) - 10;
+    var textStartY = (0.5 * myGameArea.canvas.height) - 22;
     ctx.font = 'bolder 20px Courier New';
     ctx.textAlign = 'center';
     ctx.fillStyle = 'white';
-    ctx.fillText('Any key',  textStartX, textStartY);
-    ctx.fillText('to start', textStartX, textStartY + 25);
+    ctx.fillText('Any key to',  textStartX, textStartY);
+    ctx.fillText('start', textStartX, textStartY + 25);
+    ctx.fillText('[SPACE to jump]', textStartX, textStartY + 55);
 
     document.addEventListener('keydown', startEvent);
 }
