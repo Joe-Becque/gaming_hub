@@ -1,6 +1,8 @@
 var myGamePiece;
 var myScore;
 var myObstacles       = [];
+var width             = 600;
+var height            = 500;
 var frameInterval     = 20;    //millis between each frame
 var jumpSpeedIncrease = 7;     //pixels per frame
 var gameGravity       = 0.5;   //pixels per frame per frame
@@ -12,9 +14,9 @@ var myGameArea = {
     canvas : document.createElement("canvas"),
     start : function() {
         myObstacles = []
-        this.canvas.width = 0.4 * screen.width;
-        this.canvas.height = 0.6 * screen.height;
-        this.blockDim = this.canvas.height / 15;
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.blockDim = 30  ;
         this.gapMaxSize = 6 * this.blockDim;
         this.gapMinSize = 4.2 * this.blockDim;
         this.frameNo = 0;
@@ -221,18 +223,18 @@ function updateGameArea() {
         myGameArea.nextObstacle = myGameArea.frameNo + myGameArea.obstacleInterval;
 
         //make the gap size in pixels
-        gap = Math.floor(Math.random()*(myGameArea.gapMaxSize-myGameArea.gapMinSize+1)+myGameArea.gapMinSize);
+        gap = Math.random()*(myGameArea.gapMaxSize-myGameArea.gapMinSize+1)+myGameArea.gapMinSize;
 
         //set the position of the gap (position where the top obstacle will stop)
-        maxHeight = 0.05 * screenHeight;
-        minHeight = (screenHeight - gap) - (0.05 * screenHeight);
-        var topObstacleHeight = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
-        var topObstacleStart = 0;
-        var bottomObstacleHeight = screenHeight - topObstacleHeight - gap
-        var bottomObstacleStart = screenHeight - bottomObstacleHeight;
+        maxHeight = 1;
+        minHeight = (screenHeight - gap) - 1;
+        var topObstacleHeight = Math.random()*(maxHeight-minHeight+1)+minHeight;
+        var topObstacleTop = 0;
+        var bottomObstacleHeight = screenHeight - topObstacleHeight - gap;
+        var bottomObstacleTop = screenHeight - bottomObstacleHeight;
 
-        myObstacles.push(new obstacle(obstacleWidth, topObstacleHeight, screenRHS, topObstacleStart));       // top of obstacle
-        myObstacles.push(new obstacle(obstacleWidth, bottomObstacleHeight, screenRHS, bottomObstacleStart)); // bottom
+        myObstacles.push(new obstacle(obstacleWidth, topObstacleHeight, screenRHS, topObstacleTop));       // top section of obstacle
+        myObstacles.push(new obstacle(obstacleWidth, bottomObstacleHeight, screenRHS, bottomObstacleTop)); // bottom section of obstacle
     }
 
     //move the obstacles
