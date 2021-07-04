@@ -4,9 +4,8 @@ A simple game to play in your browser. Dodge the obstacles as long as you can!
 
 My first attempt with JavaScript.
 
-## To Run
+[Click here to play!](https://joe-becque.github.io/jumpy_block/pages/jumpy_block.html)
 
-Download the repository and open `jumpy_block/pages/jumpy_block.html` in a browser.
 
 ![Start](https://user-images.githubusercontent.com/38461467/88462384-e332c300-cea2-11ea-92f1-8d05564369c6.PNG "Start")
 
